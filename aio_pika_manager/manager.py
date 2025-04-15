@@ -10,13 +10,11 @@
 import asyncio
 import logging
 import typing
-
 import aio_pika
 from tabulate import tabulate
 from aio_pika.robust_channel import AbstractRobustChannel
 from aio_pika.robust_connection import AbstractRobustConnection
 from aio_pika.robust_queue import AbstractRobustQueue
-
 from .logger import get_async_logger
 
 
@@ -25,10 +23,12 @@ class RabbitMQManger:
     Manages the connection to RabbitMQ and allows the creation of channels and queues.
     This class follows the Singleton design pattern to ensure that only one instance exists.
     """
+    #TODO: separate __ methods and create sub classes for manager class
 
     instance: typing.Optional["RabbitMQManger"] = None
     queues: typing.Dict[str, AbstractRobustQueue] = {}
-    channels: dict[str, AbstractRobustChannel] = {}
+    channels: dict = dict()
+
 
     def __new__(cls, *args, **kwargs) -> "RabbitMQManger":
         """
@@ -168,13 +168,16 @@ class RabbitMQManger:
         if self.connection is None or self.connection.is_closed:
             await self._connect()
 
-        if channel_name in self.channels and self.channels[channel_name].is_closed:
+        if channel_name not in self.channels:
+            self.channels[channel_name] = await self.connection.channel()
+        elif self.channels[channel_name].is_closed:
+            self.channels.pop(channel_name)
             self.channels[channel_name] = await self.connection.channel()
 
         return self.channels[channel_name]
 
     async def declare_queue(
-        self, queue_name: str, *args, **kwargs
+        self, queue_name: str, channel_name: str, *args, **kwargs
     ) -> AbstractRobustQueue:
         """
         Declares a queue in RabbitMQ if not already declared, otherwise returns the existing queue.
@@ -191,21 +194,23 @@ class RabbitMQManger:
             )
             return self.queues[queue_name]
 
-        # Declare a new queue
-        channel = await self.get_channel()
+
+        channel = await self.get_channel(channel_name=channel_name)
+
         queue = await channel.declare_queue(queue_name, *args, **kwargs)
         self.queues[queue_name] = queue  # Store the declared queue
         await self.logger.info(f"rabbitmq: Queue '{queue_name}' declared successfully.")
         return queue
 
-    async def __status_channels(self) -> None:
+    async def status_channels(self) -> None:
         """
             print status of all channels in table format
         :return: None
         """
 
-        table = []
+        table_data = []
         for channel in self.channels:
-            table.append((channel, self.channels[channel].is_closed))
-
-        print(tabulate(table, ["channel name", "channel status"], tablefmt="github"))
+            table_data.append((channel, "Connected" if not self.channels[channel].is_closed else "Disconnected"))
+        print()
+        print(tabulate(table_data, ["channel name", "channel status"], tablefmt="github"))
+        print()
