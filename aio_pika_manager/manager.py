@@ -1,10 +1,23 @@
-import typing
-import aio_pika
-import asyncio
+"""
+* aiopika connection manager 
+* author: github.com/alisharify7
+* email: alisharifyofficial@gmail.com
+* license: see LICENSE for more details.
+* Copyright (c) 2025 - ali sharifi
+* https://github.com/alisharify7/aio_pika_manager
+"""
 
-from aio_pika.robust_connection import AbstractRobustConnection
+import asyncio
+import logging
+import typing
+
+import aio_pika
+from tabulate import tabulate
 from aio_pika.robust_channel import AbstractRobustChannel
+from aio_pika.robust_connection import AbstractRobustConnection
 from aio_pika.robust_queue import AbstractRobustQueue
+
+from .logger import get_async_logger
 
 
 class RabbitMQManger:
@@ -13,10 +26,11 @@ class RabbitMQManger:
     This class follows the Singleton design pattern to ensure that only one instance exists.
     """
 
-    instance: typing.Optional['RabbitMQManger'] = None
+    instance: typing.Optional["RabbitMQManger"] = None
     queues: typing.Dict[str, AbstractRobustQueue] = {}
+    channels: dict[str, AbstractRobustChannel] = {}
 
-    def __new__(cls, *args, **kwargs) -> 'RabbitMQManger':
+    def __new__(cls, *args, **kwargs) -> "RabbitMQManger":
         """
         Singleton pattern to ensure only one instance of RabbitMQManger is created.
 
@@ -34,6 +48,7 @@ class RabbitMQManger:
         username: str = "guest",
         password: str = "guest",
         max_retry_connection: int = 10,
+        virtual_host: str = "/",
     ) -> None:
         """
         Initializes the RabbitMQManger instance.
@@ -50,9 +65,17 @@ class RabbitMQManger:
         self.username = username
         self.password = password
         self.connection: typing.Optional[AbstractRobustConnection] = None
-        self.channel: typing.Optional[AbstractRobustChannel] = None
         self.max_retry_connection = max_retry_connection
         self.queues: typing.Dict[str, AbstractRobustQueue] = {}
+        self.virtual_host = virtual_host
+
+    async def setup_logger(self, logger_name: str, log_file: str):
+        self.logger = await get_async_logger(
+            log_level=logging.INFO,
+            log_file=log_file,
+            logger_name=logger_name,
+        )
+        await self.logger.info("Logger Created successfully.")
 
     async def _connect(self) -> None:
         """
@@ -62,6 +85,7 @@ class RabbitMQManger:
         Raises:
             RuntimeError: If the maximum number of connection retries is exceeded.
         """
+        self.logger.info(f"rabbitmq: trying to connect to {self.host}:{self.port}")
         retries = 0
         while retries <= self.max_retry_connection:
             try:
@@ -70,27 +94,48 @@ class RabbitMQManger:
                     password=self.password,
                     host=self.host,
                     port=self.port,
-                    virtual_host="/",
+                    virtual_host=self.virtual_host,
                 )
-                print("Connected successfully.")
+                self.logger.info(
+                    f"rabbitmq: connected successfully to {self.host}:{self.port}"
+                )
                 return
             except aio_pika.exceptions.AMQPError as e:
                 retries += 1
                 wait_time = retries * 2
-                print(f"Connection error. Waiting for {wait_time} seconds.\n{e}")
+                self.logger.info(
+                    f"rabbitmq: connection failed for {self.host}:{self.port}, retry number:{retries}, wait_for: {wait_time}s,\nreason: {e.reason}"
+                )
                 await asyncio.sleep(wait_time)
 
-        raise RuntimeError("Connection error: Exceeded maximum number of connection retries.")
+        self.logger.info(
+            f"rabbitmq: connection failed for {self.host}:{self.port}, Connection error: Exceeded maximum number of connection retries"
+        )
+
+        raise RuntimeError(
+            "Connection error: Exceeded maximum number of connection retries."
+        )
 
     async def _close(self) -> None:
         """
         Closes the current connection if it is open.
         """
         if self.connection and not self.connection.is_closed:
+            # close all channels <check if we close connection all channels will be closed automatically or not, just for now>
+            for channel in self.channels:
+                await self.channels[channel].close()
+                await self.logger.info(
+                    f"connection to channel: {channel} closed."
+                )
+
             await self.connection.close()
+            await self.logger.info(
+                f"rabbitmq: connection to {self.host}:{self.port} closed."
+            )
             self.connection = None
 
-    async def __aenter__(self) -> 'RabbitMQManger':
+
+    async def __aenter__(self) -> "RabbitMQManger":
         """
         Asynchronous context manager entry method. Ensures the connection is established.
 
@@ -113,7 +158,7 @@ class RabbitMQManger:
         """
         await self._close()
 
-    async def get_channel(self) -> AbstractRobustChannel:
+    async def get_channel(self, channel_name: str) -> AbstractRobustChannel:
         """
         Returns an active RabbitMQ channel. If no active channel exists, creates one.
 
@@ -123,11 +168,14 @@ class RabbitMQManger:
         if self.connection is None or self.connection.is_closed:
             await self._connect()
 
-        if self.channel is None or self.channel.is_closed:
-            self.channel = await self.connection.channel()
-        return self.channel
+        if channel_name in self.channels and self.channels[channel_name].is_closed:
+            self.channels[channel_name] = await self.connection.channel()
 
-    async def declare_queue(self, queue_name: str) -> AbstractRobustQueue:
+        return self.channels[channel_name]
+
+    async def declare_queue(
+        self, queue_name: str, *args, **kwargs
+    ) -> AbstractRobustQueue:
         """
         Declares a queue in RabbitMQ if not already declared, otherwise returns the existing queue.
 
@@ -138,16 +186,26 @@ class RabbitMQManger:
             AbstractRobustQueue: The declared or existing queue.
         """
         if queue_name in self.queues:
-            print(f"Queue '{queue_name}' already declared, returning existing one.")
+            await self.logger.info(
+                f"rabbitmq: Queue '{queue_name}' already declared, returning existing one."
+            )
             return self.queues[queue_name]
 
         # Declare a new queue
         channel = await self.get_channel()
-        queue = await channel.declare_queue(queue_name, durable=True)
+        queue = await channel.declare_queue(queue_name, *args, **kwargs)
         self.queues[queue_name] = queue  # Store the declared queue
-        print(f"Queue '{queue_name}' declared successfully.")
+        await self.logger.info(f"rabbitmq: Queue '{queue_name}' declared successfully.")
         return queue
 
+    async def __status_channels(self) -> None:
+        """
+            print status of all channels in table format
+        :return: None
+        """
 
+        table = []
+        for channel in self.channels:
+            table.append((channel, self.channels[channel].is_closed))
 
-
+        print(tabulate(table, ["channel name", "channel status"], tablefmt="github"))
