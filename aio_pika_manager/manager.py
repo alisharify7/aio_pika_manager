@@ -1,5 +1,5 @@
 """
-* aiopika connection manager 
+* aiopika connection manager
 * author: github.com/alisharify7
 * email: alisharifyofficial@gmail.com
 * license: see LICENSE for more details.
@@ -12,17 +12,30 @@ import typing
 from aio_pika.robust_connection import AbstractRobustConnection
 from aio_pika.robust_queue import AbstractRobustQueue
 
-from aio_pika_manager.mixins import LoggerMixin, StatusMixin
+from aio_pika_manager.mixins import (
+    LoggerMixin,
+    StatusMixin,
+    ChannelMixin,
+    AsyncMixin,
+    QueueMixin,
+    ConnectionMixin,
+)
 
 
-# "Mixin with expected interface"
-# "Duck typing mixin"
+class UpperManagerMixin(
+    LoggerMixin, StatusMixin, ChannelMixin, AsyncMixin, QueueMixin, ConnectionMixin
+):
+    pass
 
-class RabbitMQManger(LoggerMixin, StatusMixin):
+
+class RabbitMQManger(UpperManagerMixin):
     """
     Manages the connection to RabbitMQ and allows the creation of channels and queues.
     This class follows the Singleton design pattern to ensure that only one instance exists.
     """
+
+    # "Mixin with expected interface"
+    # "Duck typing mixin"
 
     instance: typing.Optional["RabbitMQManger"] = None
     queues: typing.Dict[str, AbstractRobustQueue] = {}
@@ -40,13 +53,13 @@ class RabbitMQManger(LoggerMixin, StatusMixin):
         return cls.instance
 
     def __init__(
-            self,
-            host: str = "localhost",
-            port: int = 5672,
-            username: str = "guest",
-            password: str = "guest",
-            max_retry_connection: int = 10,
-            virtual_host: str = "/",
+        self,
+        host: str = "localhost",
+        port: int = 5672,
+        username: str = "guest",
+        password: str = "guest",
+        max_retry_connection: int = 10,
+        virtual_host: str = "/",
     ) -> None:
         """
         Initializes the RabbitMQManger instance.
