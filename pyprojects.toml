@@ -1,0 +1,33 @@
+[project]
+name = "aio_pika_manager"
+version = "1.0.0"
+description = "aio_pika_manager"
+readme = "README.md"
+authors = [
+    { name = "Ali Sharify", email = "alisharifyofficial@gmail.com" }
+]
+license = "GPL-3.0"
+keywords = ["aio_pika", "rabbitmq", "pika", "aio_pika_manager"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+requires-python = ">=3.9"
+dependencies = [
+]
+
+[project.urls]
+Homepage = "https://github.com/alisharify7/aio_pika_manager"
+Documentation = "https://github.com/alisharify7/aio_pika_manager"
+Repository = "https://github.com/alisharify7/aio_pika_manager"
+Donate = "https://www.coffeete.ir/alisharify7"
+Source = "https://github.com/alisharify7/aio_pika_manager"
+
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
