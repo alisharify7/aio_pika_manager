@@ -6,6 +6,7 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/aio_pika_manager
 """
+
 from typing import TypeVar, Protocol
 
 from aio_pika.abc import AbstractRobustChannel
@@ -30,7 +31,18 @@ class StatusMixin:
 
         table_data = []
         for channel in self.channels:
-            table_data.append((channel, "Connected" if not self.channels[channel].is_closed else "Disconnected"))
+            table_data.append(
+                (
+                    channel,
+                    (
+                        "Connected"
+                        if not self.channels[channel].is_closed
+                        else "Disconnected"
+                    ),
+                )
+            )
         print()
-        print(tabulate(table_data, ["channel name", "channel status"], tablefmt="github"))
+        print(
+            tabulate(table_data, ["channel name", "channel status"], tablefmt="github")
+        )
         print()

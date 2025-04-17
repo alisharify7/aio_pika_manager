@@ -6,13 +6,14 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/aio_pika_manager
 """
+
 import logging
 from typing import Protocol, TypeVar
 
 from aio_pika_manager.protocols import RabbitMQConnectionBaseProtocol
 from aio_pika_manager.utils.logger import get_async_logger
 
-T = TypeVar('T', bound="LoggerProtocol")
+T = TypeVar("T", bound="LoggerProtocol")
 
 
 class LoggerProtocol(RabbitMQConnectionBaseProtocol, Protocol):

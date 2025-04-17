@@ -9,4 +9,4 @@
 
 from .manager import RabbitMQManger
 
-__all__ = ['RabbitMQManger']
+__all__ = ["RabbitMQManger"]

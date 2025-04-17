@@ -6,6 +6,7 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/aio_pika_manager
 """
+
 import asyncio
 from typing import Protocol, TypeVar
 
@@ -69,9 +70,7 @@ class ConnectionMixin:
             # close all channels <check if we close connection all channels will be closed automatically or not, just for now>
             for channel in self.channels:
                 await self.channels[channel].close()
-                await self.logger.info(
-                    f"connection to channel: {channel} closed."
-                )
+                await self.logger.info(f"connection to channel: {channel} closed.")
 
             await self.connection.close()
             await self.logger.info(

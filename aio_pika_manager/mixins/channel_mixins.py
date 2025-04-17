@@ -6,6 +6,7 @@
 * Copyright (c) 2025 - ali sharifi
 * https://github.com/alisharify7/aio_pika_manager
 """
+
 from typing import Protocol, TypeVar
 
 from aio_pika.abc import AbstractRobustChannel

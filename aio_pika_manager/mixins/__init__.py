@@ -14,4 +14,11 @@ from .logger_mixins import LoggerMixin
 from .queue_mixins import QueueMixin
 from .status_mixins import StatusMixin
 
-__all__ = ["LoggerMixin", "StatusMixin", "ConnectionMixin", "AsyncMixin", "QueueMixin", "ChannelMixin"]
+__all__ = [
+    "LoggerMixin",
+    "StatusMixin",
+    "ConnectionMixin",
+    "AsyncMixin",
+    "QueueMixin",
+    "ChannelMixin",
+]

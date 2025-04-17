@@ -1,5 +1,5 @@
 """
-* aiopika connection manager 
+* aiopika connection manager
 * author: github.com/alisharify7
 * email: alisharifyofficial@gmail.com
 * license: see LICENSE for more details.
@@ -18,12 +18,12 @@ from aiologger.handlers.streams import AsyncStreamHandler
 
 
 async def get_async_logger(
-        log_level: int,
-        logger_name: str = "user-service",
-        log_file: Optional[str] = None,
-        rotation: RolloverInterval = RolloverInterval.MIDNIGHT,
-        backup_count: int = 7,
-        encoding: str = "utf-8",
+    log_level: int,
+    logger_name: str = "user-service",
+    log_file: Optional[str] = None,
+    rotation: RolloverInterval = RolloverInterval.MIDNIGHT,
+    backup_count: int = 7,
+    encoding: str = "utf-8",
 ) -> Logger:
     """
     Create an advanced asynchronous logger with optional file rotation.
