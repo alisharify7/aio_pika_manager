@@ -9,6 +9,7 @@
 
 import typing
 
+from aio_pika.abc import AbstractRobustChannel
 from aio_pika.robust_connection import AbstractRobustConnection
 from aio_pika.robust_queue import AbstractRobustQueue
 
@@ -39,7 +40,7 @@ class RabbitMQManger(UpperManagerMixin):
 
     instance: typing.Optional["RabbitMQManger"] = None
     queues: typing.Dict[str, AbstractRobustQueue] = {}
-    channels: dict = dict()
+    channels: typing.Dict[str, AbstractRobustChannel] = {}
 
     def __new__(cls, *args, **kwargs) -> "RabbitMQManger":
         """
@@ -60,6 +61,8 @@ class RabbitMQManger(UpperManagerMixin):
         password: str = "guest",
         max_retry_connection: int = 10,
         virtual_host: str = "/",
+        logger_name: str = "aio_pika_manager",
+        log_file: str | None = None,
     ) -> None:
         """
         Initializes the RabbitMQManger instance.
@@ -78,3 +81,28 @@ class RabbitMQManger(UpperManagerMixin):
         self.connection: typing.Optional[AbstractRobustConnection] = None
         self.max_retry_connection = max_retry_connection
         self.virtual_host = virtual_host
+
+    @classmethod
+    async def create(
+        cls,
+        host: str = "localhost",
+        port: int = 5672,
+        username: str = "guest",
+        password: str = "guest",
+        max_retry_connection: int = 10,
+        virtual_host: str = "/",
+        logger_name: str = "aio_pika_manager",
+        log_file: str | None = None,
+    ) -> "RabbitMQManger":
+        instance = cls(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            max_retry_connection=max_retry_connection,
+            virtual_host=virtual_host,
+            logger_name=logger_name,
+            log_file=log_file,
+        )
+        await instance.setup_logger(logger_name=logger_name, log_file=log_file)
+        return instance
