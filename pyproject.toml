@@ -1,0 +1,71 @@
+[project]
+name = "aio_pika_manager"
+version = "1.0.0"
+description = "A robust async RabbitMQ manager built on aio-pika"
+readme = "README.md"
+authors = [
+    { name = "Ali Sharify", email = "alisharifyofficial@gmail.com" }
+]
+license = { text = "GPL-3.0-or-later" }
+keywords = [
+    "rabbitmq",
+    "aio-pika",
+    "async",
+    "message-queue",
+    "amqp",
+    "message-broker"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Typing :: Typed",
+]
+
+requires-python = ">=3.9"
+dependencies = [
+    "aio-pika>=9.5.5,<10.0.0",
+    "aiologger>=0.7.0,<1.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.20.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "flake8>=5.0",
+    "black>=22.0",
+    "isort>=5.0"
+]
+docs = [
+    "sphinx>=5.0",
+    "furo>=2022.0",
+    "sphinx-autodoc-typehints>=1.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/alisharify7/aio_pika_manager"
+Documentation = "https://github.com/alisharify7/aio_pika_manager#readme"
+Repository = "https://github.com/alisharify7/aio_pika_manager"
+Issues = "https://github.com/alisharify7/aio_pika_manager/issues"
+Changelog = "https://github.com/alisharify7/aio_pika_manager/releases"
+Donate = "https://www.coffeete.ir/alisharify7"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["aio_pika_manager"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.pyi", "py.typed"]
