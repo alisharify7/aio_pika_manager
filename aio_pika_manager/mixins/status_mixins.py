@@ -46,3 +46,16 @@ class StatusMixin:
             tabulate(table_data, ["channel name", "channel status"], tablefmt="github")
         )
         print()
+
+    async def status_queues(self: T) -> None:
+        """
+            print status of all channels in table format
+        :return: None
+        """
+
+        table_data = []
+        for index, (queue_name, queue_obj) in enumerate(self.queues):
+            table_data.append((index, queue_name))
+        print()
+        print(tabulate(table_data, ["#", "queue name"], tablefmt="github"))
+        print()
