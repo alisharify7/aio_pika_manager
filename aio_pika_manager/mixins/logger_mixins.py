@@ -22,7 +22,9 @@ class LoggerProtocol(RabbitMQConnectionBaseProtocol, Protocol):
 
 class LoggerMixin:
 
-    async def setup_logger(self, logger_name: str, log_file: str):
+    async def setup_logger(
+        self, logger_name: str = "aio_pika_manager", log_file: str | None = None
+    ):
         """
         setup logger for main Connection manager class.
         add logger property to current instance.
